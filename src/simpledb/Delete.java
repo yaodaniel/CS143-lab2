@@ -19,25 +19,42 @@ public class Delete extends Operator {
      * @param child
      *            The child operator from which to read tuples for deletion
      */
+    private TransactionId _trans_id;
+    private DbIterator _oppairator;
+    private Tuple tup;
+    private boolean _squeezed;
+    
     public Delete(TransactionId t, DbIterator child) {
         // some code goes here
+    	_trans_id = t;
+    	_oppairator = child;
+    	Type [] type = {Type.INT_TYPE};
+    	String [] s = {null};
+    	TupleDesc td = new TupleDesc(type, s);
+    	tup = new Tuple(td);
     }
 
     public TupleDesc getTupleDesc() {
         // some code goes here
-        return null;
+        return tup.getTupleDesc();
     }
 
     public void open() throws DbException, TransactionAbortedException {
         // some code goes here
+    	super.open();
+    	_oppairator.open();
+    	_squeezed = false;
     }
 
     public void close() {
         // some code goes here
+    	super.close();
+    	_oppairator.close();
     }
 
     public void rewind() throws DbException, TransactionAbortedException {
         // some code goes here
+    	_oppairator.rewind();
     }
 
     /**
@@ -51,18 +68,34 @@ public class Delete extends Operator {
      */
     protected Tuple fetchNext() throws TransactionAbortedException, DbException {
         // some code goes here
-        return null;
+    	if (_squeezed) return null;
+    	int inserts = 0;
+    	BufferPool bf = Database.getBufferPool();
+    	while (_oppairator.hasNext()){
+    		try {
+    			bf.deleteTuple(_trans_id, _oppairator.next());
+    			inserts++;
+    		}
+    		catch (IOException e){
+    			e.printStackTrace();
+    		}
+    	}
+    	tup.setField(0, new IntField(inserts));
+    	_squeezed = true;
+        return tup;
     }
 
     @Override
     public DbIterator[] getChildren() {
         // some code goes here
-        return null;
+    	DbIterator [] dbI = {_oppairator};
+        return dbI;
     }
 
     @Override
     public void setChildren(DbIterator[] children) {
         // some code goes here
+    	_oppairator = children[0];
     }
 
 }

@@ -21,7 +21,8 @@ public class HeapPage implements Page {
 
     byte[] oldData;
     private final Byte oldDataLock=new Byte((byte)0);
-
+    private boolean dirty;
+    private Stack<TransactionId> tids;
     /**
      * Create a HeapPage from a set of bytes of data read from disk.
      * The format of a HeapPage is a set of header bytes indicating
@@ -42,6 +43,8 @@ public class HeapPage implements Page {
         this.pid = id;
         this.td = Database.getCatalog().getTupleDesc(id.getTableId());
         this.numSlots = getNumTuples();
+        this.dirty = false;
+        this.tids = new Stack<TransactionId>();
         DataInputStream dis = new DataInputStream(new ByteArrayInputStream(data));
 
         // allocate and read the header slots of this page
@@ -246,6 +249,14 @@ public class HeapPage implements Page {
     public void deleteTuple(Tuple t) throws DbException {
         // some code goes here
         // not necessary for lab1
+    	for (int i = 0; i < this.numSlots; i++){
+    		if (t.equals(tuples[i])){
+    			tuples[i] = null;
+    			markSlotUsed(i, false);
+    			return;
+    		}
+    	}
+    	throw new DbException("Tuple not found");
     }
 
     /**
@@ -258,6 +269,15 @@ public class HeapPage implements Page {
     public void insertTuple(Tuple t) throws DbException {
         // some code goes here
         // not necessary for lab1
+    	for (int i = 0; i < this.numSlots; i++){
+    		if(!isSlotUsed(i)){
+    			t.setRecordId(new RecordId(getId(), i));
+    			tuples[i] = t;
+    			markSlotUsed(i, true);
+    			return;
+    		}
+    	}
+    	throw new DbException("Page full");
     }
 
     /**
@@ -267,6 +287,8 @@ public class HeapPage implements Page {
     public void markDirty(boolean dirty, TransactionId tid) {
         // some code goes here
 	// not necessary for lab1
+    	this.dirty = true;
+    	if (dirty) tids.push(tid);
     }
 
     /**
@@ -275,7 +297,8 @@ public class HeapPage implements Page {
     public TransactionId isDirty() {
         // some code goes here
 	// Not necessary for lab1
-        return null;      
+    	if (tids.empty() || !dirty) return null;
+        return tids.pop();      
     }
 
     /**
@@ -308,6 +331,9 @@ public class HeapPage implements Page {
     private void markSlotUsed(int i, boolean value) {
         // some code goes here
         // not necessary for lab1
+    	int mask = 0x1;
+    	mask <<= (i%8);
+        header[i/8] ^= mask;
     }
 
     /**

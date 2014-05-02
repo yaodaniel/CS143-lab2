@@ -28,10 +28,14 @@ public class HeapFileIter implements DbFileIterator {
 
 	@Override
 	public boolean hasNext() throws DbException, TransactionAbortedException {
-		if (_tuples == null)
-			return false;
+		if (_tuples == null) return false;
+		
 		HeapFile file = (HeapFile)Database.getCatalog().getDatabaseFile(_tableid);
-		return (_tuples.hasNext() || _pgNo < file.numPages());
+		while(!_tuples.hasNext() && _pgNo < file.numPages()){
+			open();
+		}
+		if (_tuples.hasNext()) return true;
+		return false;
 	}
 
 	@Override
@@ -39,18 +43,11 @@ public class HeapFileIter implements DbFileIterator {
 			NoSuchElementException {
 		if (_tuples == null)
 			throw new NoSuchElementException();
-		HeapFile file = (HeapFile)Database.getCatalog().getDatabaseFile(_tableid);
-		if (!_tuples.hasNext() && _pgNo < file.numPages()){
-			open();
-		}
 		return _tuples.next();
 	}
 
 	@Override
 	public void rewind() throws DbException, TransactionAbortedException {
-		// TODO Auto-generated method stub
-		//while(_tuples.hasPrevious())
-			//_tuples.previous();
 		_pgNo = 0;
 		open();
 	}
