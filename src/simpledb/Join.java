@@ -20,13 +20,22 @@ public class Join extends Operator {
      * @param child2
      *            Iterator for the right(inner) relation to join
      */
+    
+    private JoinPredicate _oppai;
+    private DbIterator _oppai1;
+    private DbIterator _oppai2;
+    private Tuple _left_oppai;
+    
     public Join(JoinPredicate p, DbIterator child1, DbIterator child2) {
         // some code goes here
+    	_oppai = p;
+    	_oppai1 = child1;
+    	_oppai2 = child2;
     }
 
     public JoinPredicate getJoinPredicate() {
         // some code goes here
-        return null;
+        return _oppai;
     }
 
     /**
@@ -55,20 +64,29 @@ public class Join extends Operator {
      */
     public TupleDesc getTupleDesc() {
         // some code goes here
-        return null;
+        return TupleDesc.merge(_oppai1.getTupleDesc(), _oppai2.getTupleDesc());
     }
 
     public void open() throws DbException, NoSuchElementException,
             TransactionAbortedException {
         // some code goes here
+    	_oppai1.open();
+    	_oppai2.open();
+    	super.open();
+    	_left_oppai = _oppai1.next();
     }
 
     public void close() {
         // some code goes here
+    	_oppai1.close();
+    	_oppai2.close();
+    	super.close();
     }
 
     public void rewind() throws DbException, TransactionAbortedException {
         // some code goes here
+    	_oppai1.rewind();
+    	_oppai2.rewind();
     }
 
     /**
@@ -91,18 +109,38 @@ public class Join extends Operator {
      */
     protected Tuple fetchNext() throws TransactionAbortedException, DbException {
         // some code goes here
+    	while(_oppai2.hasNext() || _oppai1.hasNext()){
+    		if (!_oppai2.hasNext()){
+    			_left_oppai = _oppai1.next();
+    			_oppai2.rewind();
+    		}
+    		Tuple t2 = _oppai2.next();
+    		if (_oppai.filter(_left_oppai, t2)){
+    			Tuple res = new Tuple(TupleDesc.merge(_left_oppai.getTupleDesc(), t2.getTupleDesc()));
+    			for (int i = 0; i < _left_oppai.getTupleDesc().numFields(); i++){
+    				res.setField(i, _left_oppai.getField(i));
+    			}
+    			for (int i = 0; i < t2.getTupleDesc().numFields(); i++){
+    				res.setField(_left_oppai.getTupleDesc().numFields() + i, t2.getField(i));
+    			}
+    			return res;
+    		}
+    	}
         return null;
     }
 
     @Override
     public DbIterator[] getChildren() {
         // some code goes here
-        return null;
+    	DbIterator[] dbI = {_oppai1, _oppai2};
+        return dbI;
     }
 
     @Override
     public void setChildren(DbIterator[] children) {
         // some code goes here
+    	_oppai1 = children[0];
+    	_oppai2 = children[1];
     }
 
 }
