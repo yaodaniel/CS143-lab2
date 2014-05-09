@@ -100,6 +100,20 @@ public class HeapFile implements DbFile {
     public void writePage(Page page) throws IOException {
         // some code goes here
         // not necessary for lab1
+    	//Current writes the updated file back, but does not remove it from HeapFile
+    	RandomAccessFile raf = new RandomAccessFile(f, "w");
+    	int page_size = BufferPool.getPageSize(); //Size (in bytes) per page as deemed by BufferPool
+    	byte [] page_data = page.getPageData(); //Gets the data in bytes of the page we're trying to write
+    	int offset = page_size*pages.indexOf((HeapPageId)page.getId()); //Returns the offset from where we should start writing on f
+    	try {
+    		raf.skipBytes(offset);
+    		raf.write(page_data);
+    		raf.close();
+    	} catch (FileNotFoundException e) {
+    		e.printStackTrace();
+    	} /*catch (IOException e) {
+    		e.printStackTrace();
+    	}*/
     }
 
     /**

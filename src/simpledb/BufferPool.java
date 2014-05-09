@@ -178,6 +178,7 @@ public class BufferPool {
      *     break simpledb if running in NO STEAL mode.
      */
     public synchronized void flushAllPages() throws IOException {
+    //TODO
         // some code goes here
         // not necessary for lab1
 
@@ -198,6 +199,7 @@ public class BufferPool {
      * @param pid an ID indicating the page to flush
      */
     private synchronized  void flushPage(PageId pid) throws IOException {
+    //TODO
         // some code goes here
         // not necessary for lab1
     }
@@ -205,6 +207,7 @@ public class BufferPool {
     /** Write all pages of the specified transaction to disk.
      */
     public synchronized  void flushPages(TransactionId tid) throws IOException {
+    //TODO
         // some code goes here
         // not necessary for lab1|lab2
     }
@@ -214,6 +217,7 @@ public class BufferPool {
      * Flushes the page to disk to ensure dirty pages are updated on disk.
      */
     private synchronized  void evictPage() throws DbException {
+    //TODO
         // some code goes here
         // not necessary for lab1
     }
