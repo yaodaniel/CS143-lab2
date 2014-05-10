@@ -22,18 +22,20 @@ public class HeapFile implements DbFile {
      *            the file that stores the on-disk backing store for this heap
      *            file.
      */
-	
+
 	private int num_pages;
 	private TupleDesc td;
 	private File f;
-	private ArrayList<Page> pages;
-	
+	//private HeapPage page;
+	//private ArrayList<Page> pages;
+
     public HeapFile(File f, TupleDesc td) {
         // some code goes here
     	this.f = f;
     	this.td = td;
-    	pages = new ArrayList<Page>();
+    	//pages = new ArrayList<Page>();
     	this.num_pages = (int) (f.length()/BufferPool.getPageSize() + .5);
+    	//cur_page = 0;
     }
 
     /**
@@ -74,20 +76,16 @@ public class HeapFile implements DbFile {
     public Page readPage(PageId pid) {
         // some code goes here
     	int page_size = BufferPool.getPageSize();
-    	int num_pages = (int) (f.length()/BufferPool.getPageSize() + .5);
+    	int num_pages_on_file = (int) (f.length()/BufferPool.getPageSize() + .5);
     	byte [] data = HeapPage.createEmptyPageData();
     	try {
-    		if (pages.size() >= num_pages){
-    			data = HeapPage.createEmptyPageData();
-    		}
-    		if (pages.size() < num_pages) {
+    		if (pid.pageNumber() < num_pages_on_file) {
     			RandomAccessFile raf = new RandomAccessFile(f, "r");
-				raf.skipBytes(page_size*pages.size());
+				raf.skipBytes(page_size*pid.pageNumber());
 				raf.read(data);
 				raf.close();
-    		}
-			pages.add(new HeapPage((HeapPageId) pid, data));
-			return pages.get(pages.size() - 1);
+    		} 
+			return new HeapPage((HeapPageId) pid, data);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -104,7 +102,7 @@ public class HeapFile implements DbFile {
     	RandomAccessFile raf = new RandomAccessFile(f, "rw");
     	int page_size = BufferPool.getPageSize(); //Size (in bytes) per page as deemed by BufferPool
     	byte [] page_data = page.getPageData(); //Gets the data in bytes of the page we're trying to write
-    	int offset = page_size*pages.indexOf((HeapPageId)page.getId()); //Returns the offset from where we should start writing on f
+    	int offset = page_size*page.getId().pageNumber(); //Returns the offset from where we should start writing on f
     	try {
     		raf.skipBytes(offset);
     		raf.write(page_data);
@@ -172,4 +170,3 @@ public class HeapFile implements DbFile {
     }
 
 }
-
