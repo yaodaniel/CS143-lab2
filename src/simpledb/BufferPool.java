@@ -105,6 +105,23 @@ public class BufferPool {
     	prio++;
         return pages.get(pid.hashCode());
     }
+    /*
+    / /\
+    / / /
+   / / /   _
+  /_/ /   / /\
+  \ \ \  / /  \
+   \ \ \/ / /\ \
+_   \ \ \/ /\ \ \
+/_/\   \_\  /  \ \ \
+\ \ \  / /  \   \_\/
+\ \ \/ / /\ \
+\ \ \/ /\ \ \
+ \ \  /  \ \ \
+  \_\/   / / /
+        / / /
+       /_/ /
+       \_\/*/
 
     /**
      * Releases the lock on a page.
