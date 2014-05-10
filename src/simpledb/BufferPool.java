@@ -5,6 +5,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -34,33 +35,20 @@ public class BufferPool {
      *
      * @param numPages maximum number of pages in this buffer pool.
      */
-    public static class Prio implements Comparable{
-    	protected int prio;
-    	public PageId pid;
-    	public Prio(int prio, PageId pid){
-    		this.prio = prio;
-    		this.pid = pid;
-    	}
-    	public int compareTo(Object arg0){
-    		Prio other = (Prio) arg0;
-    		if(other.prio == prio) return 0;
-    		else if(other.prio > prio) return -1;
-    		else return 1;
-    	}
-    }
     
-    private int prio;
+    private int num_pages;
     private HashMap<Integer, Page> pages;
     private HashMap<TransactionId, ArrayList<PageId>> tits;
-    private PriorityQueue<Prio> prior;
+    private Queue<Integer> hashcodes;
+    //private PriorityQueue<Prio> prior;
     
     
     public BufferPool(int numPages) {
         // some code goes here
-    	prio = 0;
+    	num_pages = numPages;
     	pages = new HashMap<Integer, Page>();
     	tits = new HashMap<TransactionId, ArrayList<PageId>>();
-    	prior = new PriorityQueue<Prio>();
+    	hashcodes = new PriorityQueue<Integer>();
     }
     
     public static int getPageSize() {
@@ -91,37 +79,21 @@ public class BufferPool {
         throws TransactionAbortedException, DbException {
         // some code goes here
     	if (!pages.containsKey(pid.hashCode())){
-    		if (pages.size() == DEFAULT_PAGES)
+    		if (pages.size() >= num_pages){
+    			System.out.println(pages.size());
     			//throw new DbException("Page limit reached");
     			evictPage();
+    		}
     		DbFile dbFile = Database.getCatalog().getDatabaseFile(pid.getTableId());
     		pages.put(pid.hashCode(), dbFile.readPage(pid));
     		if (!tits.containsKey(tid)){
     			tits.put(tid, new ArrayList<PageId>());
     		}
     		tits.get(tid).add(pid);
+    		hashcodes.add(pid.hashCode());
     	}
-    	prior.add(new Prio(prio, pid));
-    	prio++;
         return pages.get(pid.hashCode());
     }
-    /*
-    / /\
-    / / /
-   / / /   _
-  /_/ /   / /\
-  \ \ \  / /  \
-   \ \ \/ / /\ \
-_   \ \ \/ /\ \ \
-/_/\   \_\  /  \ \ \
-\ \ \  / /  \   \_\/
-\ \ \/ / /\ \
-\ \ \/ /\ \ \
- \ \  /  \ \ \
-  \_\/   / / /
-        / / /
-       /_/ /
-       \_\/*/
 
     /**
      * Releases the lock on a page.
@@ -192,8 +164,6 @@ _   \ \ \/ /\ \ \
     		tits.put(tid, new ArrayList<PageId>());
     	}
     	tits.get(tid).add(t.getRecordId().getPageId());
-    	prior.add(new Prio(prio, t.getRecordId().getPageId()));
-    	prio++;
     }
 
     /**
@@ -220,8 +190,6 @@ _   \ \ \/ /\ \ \
     		tits.put(tid, new ArrayList<PageId>());
     	}
     	tits.get(tid).add(t.getRecordId().getPageId());
-    	prior.add(new Prio(prio, t.getRecordId().getPageId()));
-    	prio++;
     }
 
     /**
@@ -281,12 +249,7 @@ _   \ \ \/ /\ \ \
     //TODO
         // some code goes here
         // not necessary for lab1
-    	PageId pid;
-    	do {
-    		pid = prior.remove().pid;
-    		prio--;
-    	} while(!pages.containsKey(pid.hashCode()));
-    	pages.remove(pages.get(pid.hashCode()));
+    	pages.remove(hashcodes.remove());
     	//WE NEED SOME TYPE OF ENVICTION POLICY CUZ THINGS BE CRAY CRAY
     }
 }
