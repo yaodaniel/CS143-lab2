@@ -152,6 +152,11 @@ public class BufferPool {
         // not necessary for lab1
     	DbFile db_file = Database.getCatalog().getDatabaseFile(tableId);
     	db_file.insertTuple(tid, t);
+    	pages.get(t.getRecordId().getPageId()).markDirty(true, tid);
+    	if (!tits.containsKey(tid)){
+    		tits.put(tid, new ArrayList<PageId>());
+    	}
+    	tits.get(tid).add(t.getRecordId().getPageId());
     }
 
     /**
@@ -173,6 +178,11 @@ public class BufferPool {
     	int table_id = t.getRecordId().getPageId().getTableId();
     	DbFile db_file = Database.getCatalog().getDatabaseFile(table_id);
     	db_file.deleteTuple(tid, t);
+    	pages.get(t.getRecordId().getPageId()).markDirty(true, tid);
+    	if (!tits.containsKey(tid)){
+    		tits.put(tid, new ArrayList<PageId>());
+    	}
+    	tits.get(tid).add(t.getRecordId().getPageId());
     }
 
     /**
