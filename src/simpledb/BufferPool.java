@@ -219,9 +219,11 @@ public class BufferPool {
         // some code goes here
         // not necessary for lab1
     	Page pageToBeFlushed = pages.get(pid.hashCode());
-    	DbFile tmp = Database.getCatalog().getDatabaseFile(pid.getTableId());
-    	tmp.writePage(pageToBeFlushed);
-    	//Mark as not dirty needed
+    	if(pageToBeFlushed.isDirty() != null){
+    		DbFile tmp = Database.getCatalog().getDatabaseFile(pid.getTableId());
+    		tmp.writePage(pageToBeFlushed);
+    		pageToBeFlushed.markDirty(false, pageToBeFlushed.isDirty());
+    	}
     }
 
     /** Write all pages of the specified transaction to disk.
