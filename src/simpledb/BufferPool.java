@@ -33,6 +33,23 @@ public class BufferPool {
      *
      * @param numPages maximum number of pages in this buffer pool.
      */
+<<<<<<< HEAD
+=======
+    public static class Prio implements Comparable{
+    	protected int prio;
+    	public PageId pid;
+    	public Prio(int prio, PageId pid){
+    		this.prio = prio;
+    		this.pid = pid;
+    	}
+    	public int compareTo(Object arg0){
+    		Prio other = (Prio) arg0;
+    		if(other.prio == prio) return 0;
+    		else if(other.prio > prio) return -1;
+    		else return 1;
+    	}
+    }
+>>>>>>> 8b30b2757d2978f5f61745751d07c03f19e6a11c
     
     private int numPages;
     private HashMap<Integer, Page> pages;
@@ -247,8 +264,17 @@ public class BufferPool {
     //TODO
         // some code goes here
         // not necessary for lab1
+<<<<<<< HEAD
     	//Page toBeRemoved = somePAGE();
     	//pages.remove(toBeRemoved);
+=======
+    	PageId pid;
+    	do {
+    		pid = prior.remove().pid;
+    		prio--;
+    	} while(!pages.containsKey(pid.hashCode()));
+    	pages.remove(pages.get(pid.hashCode()));
+>>>>>>> 8b30b2757d2978f5f61745751d07c03f19e6a11c
     	//WE NEED SOME TYPE OF ENVICTION POLICY CUZ THINGS BE CRAY CRAY
     }
 }
