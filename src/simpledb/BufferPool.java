@@ -34,14 +34,15 @@ public class BufferPool {
      *
      * @param numPages maximum number of pages in this buffer pool.
      */
-    public static class Prio{
+    public static class Prio implements Comparable{
     	protected int prio;
     	public PageId pid;
     	public Prio(int prio, PageId pid){
     		this.prio = prio;
     		this.pid = pid;
     	}
-    	public int compareTo(Prio other){
+    	public int compareTo(Object arg0){
+    		Prio other = (Prio) arg0;
     		if(other.prio == prio) return 0;
     		else if(other.prio > prio) return -1;
     		else return 1;
@@ -169,7 +170,7 @@ public class BufferPool {
         // not necessary for lab1
     	DbFile db_file = Database.getCatalog().getDatabaseFile(tableId);
     	db_file.insertTuple(tid, t);
-    	pages.get(t.getRecordId().getPageId()).markDirty(true, tid);
+    	pages.get(t.getRecordId().getPageId().hashCode()).markDirty(true, tid);
     	if (!tits.containsKey(tid)){
     		tits.put(tid, new ArrayList<PageId>());
     	}
@@ -197,7 +198,7 @@ public class BufferPool {
     	int table_id = t.getRecordId().getPageId().getTableId();
     	DbFile db_file = Database.getCatalog().getDatabaseFile(table_id);
     	db_file.deleteTuple(tid, t);
-    	pages.get(t.getRecordId().getPageId()).markDirty(true, tid);
+    	pages.get(t.getRecordId().getPageId().hashCode()).markDirty(true, tid);
     	if (!tits.containsKey(tid)){
     		tits.put(tid, new ArrayList<PageId>());
     	}
@@ -263,9 +264,12 @@ public class BufferPool {
     //TODO
         // some code goes here
         // not necessary for lab1
-    	Page toBeRemoved = pages.get(prior.remove().pid.hashCode());
-    	prio--;
-    	pages.remove(toBeRemoved);
+    	PageId pid;
+    	do {
+    		pid = prior.remove().pid;
+    		prio--;
+    	} while(!pages.containsKey(pid.hashCode()));
+    	pages.remove(pages.get(pid.hashCode()));
     	//WE NEED SOME TYPE OF ENVICTION POLICY CUZ THINGS BE CRAY CRAY
     }
 }
