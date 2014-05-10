@@ -5,11 +5,6 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.PriorityQueue;
-<<<<<<< HEAD
-=======
-import java.util.Queue;
-import java.util.concurrent.ConcurrentHashMap;
->>>>>>> 953b3892ea0358eb83b47700a77302bfc778df86
 
 /**
  * BufferPool manages the reading and writing of pages into memory from
@@ -38,29 +33,34 @@ public class BufferPool {
      *
      * @param numPages maximum number of pages in this buffer pool.
      */
+    public static class Prio implements Comparable{
+    	protected int prio;
+    	public PageId pid;
+    	public Prio(int prio, PageId pid){
+    		this.prio = prio;
+    		this.pid = pid;
+    	}
+    	public int compareTo(Object arg0){
+    		Prio other = (Prio) arg0;
+    		if(other.prio == prio) return 0;
+    		else if(other.prio > prio) return -1;
+    		else return 1;
+    	}
+    }
     
-<<<<<<< HEAD
     private int prio, numpages = DEFAULT_PAGES;
-=======
-    private int num_pages;
->>>>>>> 953b3892ea0358eb83b47700a77302bfc778df86
     private HashMap<Integer, Page> pages;
     private HashMap<TransactionId, ArrayList<PageId>> tits;
-    private Queue<Integer> hashcodes;
-    //private PriorityQueue<Prio> prior;
+    private PriorityQueue<Prio> prior;
     
     
     public BufferPool(int numPages) {
         // some code goes here
-<<<<<<< HEAD
     	numpages = numPages;
     	prio = 0;
-=======
-    	num_pages = numPages;
->>>>>>> 953b3892ea0358eb83b47700a77302bfc778df86
     	pages = new HashMap<Integer, Page>();
     	tits = new HashMap<TransactionId, ArrayList<PageId>>();
-    	hashcodes = new PriorityQueue<Integer>();
+    	prior = new PriorityQueue<Prio>();
     }
     
     public static int getPageSize() {
@@ -91,24 +91,19 @@ public class BufferPool {
         throws TransactionAbortedException, DbException {
         // some code goes here
     	if (!pages.containsKey(pid.hashCode())){
-<<<<<<< HEAD
     		System.out.println("" + pages.size());
     		if (pages.size() >= numpages)
-=======
-    		if (pages.size() >= num_pages){
-    			System.out.println(pages.size());
->>>>>>> 953b3892ea0358eb83b47700a77302bfc778df86
     			//throw new DbException("Page limit reached");
     			evictPage();
-    		}
     		DbFile dbFile = Database.getCatalog().getDatabaseFile(pid.getTableId());
     		pages.put(pid.hashCode(), dbFile.readPage(pid));
     		if (!tits.containsKey(tid)){
     			tits.put(tid, new ArrayList<PageId>());
     		}
     		tits.get(tid).add(pid);
-    		hashcodes.add(pid.hashCode());
     	}
+    	prior.add(new Prio(prio, pid));
+    	prio++;
         return pages.get(pid.hashCode());
     }
 
@@ -181,6 +176,8 @@ public class BufferPool {
     		tits.put(tid, new ArrayList<PageId>());
     	}
     	tits.get(tid).add(t.getRecordId().getPageId());
+    	prior.add(new Prio(prio, t.getRecordId().getPageId()));
+    	prio++;
     }
 
     /**
@@ -207,6 +204,8 @@ public class BufferPool {
     		tits.put(tid, new ArrayList<PageId>());
     	}
     	tits.get(tid).add(t.getRecordId().getPageId());
+    	prior.add(new Prio(prio, t.getRecordId().getPageId()));
+    	prio++;
     }
 
     /**
@@ -277,7 +276,6 @@ public class BufferPool {
     //TODO
         // some code goes here
         // not necessary for lab1
-<<<<<<< HEAD
     	PageId pid;
     	do {
     		Prio tmp = prior.remove();
@@ -285,9 +283,6 @@ public class BufferPool {
     		prio--;
     	} while(!pages.containsKey(pid.hashCode()));
     	pages.remove(pid.hashCode());
-=======
-    	pages.remove(hashcodes.remove());
->>>>>>> 953b3892ea0358eb83b47700a77302bfc778df86
     	//WE NEED SOME TYPE OF ENVICTION POLICY CUZ THINGS BE CRAY CRAY
     }
 }
