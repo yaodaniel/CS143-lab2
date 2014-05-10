@@ -36,17 +36,15 @@ public class BufferPool {
     
     private int numPages;
     private HashMap<Integer, Page> pages;
-    private HashMap<Integer, TransactionId> tids;
-    private HashMap<Integer, Permissions> perms;
+    private HashMap<TransactionId, ArrayList<PageId>> tits;
+
     
     
     public BufferPool(int numPages) {
         // some code goes here
     	this.numPages = numPages;
     	pages = new HashMap<Integer, Page>();
-    	tids = new HashMap<Integer, TransactionId>();
-    	perms = new HashMap<Integer, Permissions>();
-    	
+    	tits = new HashMap<TransactionId, ArrayList<PageId>>();
     }
     
     public static int getPageSize() {
@@ -79,8 +77,13 @@ public class BufferPool {
     	if (!pages.containsKey(pid.hashCode())){
     		if (pages.size() == DEFAULT_PAGES)
     			throw new DbException("Page limit reached");
+    			//evict something
     		DbFile dbFile = Database.getCatalog().getDatabaseFile(pid.getTableId());
     		pages.put(pid.hashCode(), dbFile.readPage(pid));
+    		if (!tits.containsKey(tid)){
+    			tits.put(tid, new ArrayList<PageId>());
+    		}
+    		tits.get(tid).add(pid);
     	}
         return pages.get(pid.hashCode());
     }

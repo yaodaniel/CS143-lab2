@@ -287,7 +287,7 @@ public class HeapPage implements Page {
     public void markDirty(boolean dirty, TransactionId tid) {
         // some code goes here
 	// not necessary for lab1
-    	this.dirty = true;
+    	this.dirty = dirty;
     	if (dirty) tids.push(tid);
     }
 
