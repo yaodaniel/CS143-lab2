@@ -73,7 +73,7 @@ public class BufferPool {
      * @param pid the ID of the requested page
      * @param perm the requested permissions on the page
      */
-    public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
+    public Page getPage(TransactionId tid, PageId pid, Permissions perm)
         throws TransactionAbortedException, DbException {
         // some code goes here
     	if (!pages.containsKey(pid.hashCode())){
@@ -94,7 +94,7 @@ public class BufferPool {
      * @param tid the ID of the transaction requesting the unlock
      * @param pid the ID of the page to unlock
      */
-    public  void releasePage(TransactionId tid, PageId pid) {
+    public void releasePage(TransactionId tid, PageId pid) {
         // some code goes here
         // not necessary for lab1|lab2
     }
@@ -163,7 +163,7 @@ public class BufferPool {
      * @param tid the transaction deleting the tuple.
      * @param t the tuple to delete
      */
-    public  void deleteTuple(TransactionId tid, Tuple t)
+    public void deleteTuple(TransactionId tid, Tuple t)
         throws DbException, IOException, TransactionAbortedException {
         // some code goes here
         // not necessary for lab1
@@ -181,7 +181,10 @@ public class BufferPool {
     //TODO
         // some code goes here
         // not necessary for lab1
-
+    	for(Page p : pages.values()){
+    		if(p.isDirty() != null)
+    			flushPage(p.getId());
+    	}
     }
 
     /** Remove the specific page id from the buffer pool.
@@ -198,28 +201,36 @@ public class BufferPool {
      * Flushes a certain page to disk
      * @param pid an ID indicating the page to flush
      */
-    private synchronized  void flushPage(PageId pid) throws IOException {
+    private synchronized void flushPage(PageId pid) throws IOException {
     //TODO
         // some code goes here
         // not necessary for lab1
+    	Page pageToBeFlushed = pages.get(pid.hashCode());
+    	DbFile tmp = Database.getCatalog().getDatabaseFile(pid.getTableId());
+    	tmp.writePage(pageToBeFlushed);
+    	//Mark as not dirty needed
     }
 
     /** Write all pages of the specified transaction to disk.
      */
-    public synchronized  void flushPages(TransactionId tid) throws IOException {
+    public synchronized void flushPages(TransactionId tid) throws IOException {
     //TODO
         // some code goes here
         // not necessary for lab1|lab2
+    	//UHMMMMMM we don't yet have a supporting data structure?
+    
     }
 
     /**
      * Discards a page from the buffer pool.
      * Flushes the page to disk to ensure dirty pages are updated on disk.
      */
-    private synchronized  void evictPage() throws DbException {
+    private synchronized void evictPage() throws DbException {
     //TODO
         // some code goes here
         // not necessary for lab1
+    	Page toBeRemoved = somePAGE();
+    	pages.remove(toBeRemoved);
+    	//WE NEED SOME TYPE OF ENVICTION POLICY CUZ THINGS BE CRAY CRAY
     }
-
 }
