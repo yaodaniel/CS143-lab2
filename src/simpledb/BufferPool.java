@@ -221,7 +221,10 @@ public class BufferPool {
         // some code goes here
         // not necessary for lab1|lab2
     	//UHMMMMMM we don't yet have a supporting data structure?
-    
+    	ArrayList<PageId> pagesToBeFlushed = tits.get(tid);
+    	for(PageId pid : pagesToBeFlushed){
+    		flushPage(pid);
+    	}
     }
 
     /**
