@@ -4,6 +4,7 @@ import java.io.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.PriorityQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -33,18 +34,32 @@ public class BufferPool {
      *
      * @param numPages maximum number of pages in this buffer pool.
      */
+    public static class Prio{
+    	protected int prio;
+    	public PageId pid;
+    	public Prio(int prio, PageId pid){
+    		this.prio = prio;
+    		this.pid = pid;
+    	}
+    	public int compareTo(Prio other){
+    		if(other.prio == prio) return 0;
+    		else if(other.prio > prio) return -1;
+    		else return 1;
+    	}
+    }
     
-    private int numPages;
+    private int prio;
     private HashMap<Integer, Page> pages;
     private HashMap<TransactionId, ArrayList<PageId>> tits;
-
+    private PriorityQueue<Prio> prior;
     
     
     public BufferPool(int numPages) {
         // some code goes here
-    	this.numPages = numPages;
+    	prio = 0;
     	pages = new HashMap<Integer, Page>();
     	tits = new HashMap<TransactionId, ArrayList<PageId>>();
+    	prior = new PriorityQueue<Prio>();
     }
     
     public static int getPageSize() {
@@ -76,8 +91,8 @@ public class BufferPool {
         // some code goes here
     	if (!pages.containsKey(pid.hashCode())){
     		if (pages.size() == DEFAULT_PAGES)
-    			throw new DbException("Page limit reached");
-    			//evict something
+    			//throw new DbException("Page limit reached");
+    			evictPage();
     		DbFile dbFile = Database.getCatalog().getDatabaseFile(pid.getTableId());
     		pages.put(pid.hashCode(), dbFile.readPage(pid));
     		if (!tits.containsKey(tid)){
@@ -85,6 +100,8 @@ public class BufferPool {
     		}
     		tits.get(tid).add(pid);
     	}
+    	prior.add(new Prio(prio, pid));
+    	prio++;
         return pages.get(pid.hashCode());
     }
 
@@ -157,6 +174,8 @@ public class BufferPool {
     		tits.put(tid, new ArrayList<PageId>());
     	}
     	tits.get(tid).add(t.getRecordId().getPageId());
+    	prior.add(new Prio(prio, t.getRecordId().getPageId()));
+    	prio++;
     }
 
     /**
@@ -183,6 +202,8 @@ public class BufferPool {
     		tits.put(tid, new ArrayList<PageId>());
     	}
     	tits.get(tid).add(t.getRecordId().getPageId());
+    	prior.add(new Prio(prio, t.getRecordId().getPageId()));
+    	prio++;
     }
 
     /**
@@ -242,7 +263,8 @@ public class BufferPool {
     //TODO
         // some code goes here
         // not necessary for lab1
-    	Page toBeRemoved = somePAGE();
+    	Page toBeRemoved = pages.get(prior.remove().pid.hashCode());
+    	prio--;
     	pages.remove(toBeRemoved);
     	//WE NEED SOME TYPE OF ENVICTION POLICY CUZ THINGS BE CRAY CRAY
     }
